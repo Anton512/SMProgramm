@@ -78,6 +78,7 @@ vector<string> parse(string str)
 	for (unsigned int i = 0; i < str.size(); i++)
 	{
 		ch = str[i];
+					
 		if (str[i] == '"' && !inBrkts)
 		{
 			inBrkts = true;
@@ -93,7 +94,7 @@ vector<string> parse(string str)
 
 		if (!inBrkts)
 		{
-			if (str[i] != ' ' && !inWord)
+			if ((str[i] != ' ' && str[i] != '\n') && !inWord)
 			{
 				inWord = true;
 			}
