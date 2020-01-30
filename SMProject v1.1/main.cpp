@@ -14,6 +14,7 @@ using namespace std;
 
 
 enum COMMANDS {PUSH = 0, GET, LIST, DELETE, QUIT, ERROR_CMD };
+
 struct Command
 {
 public:
@@ -38,12 +39,13 @@ vector<Command> cmds =
 	Command(1, "list", LIST),
 	Command(1, "delete", DELETE),
 	Command(0, "quit", QUIT),
-	Command(0, "", ERROR_CMD),
+	Command(0, "error", ERROR_CMD),
 };
 
 vector<string> parse(string str);
 string getStr();
 Command initCmd(vector<string> _words, vector<Command> _cmds);
+int validateCmd(Command _cmd, vector<Command> _cmds);
 int main()
 {
 	
@@ -57,11 +59,15 @@ int main()
 		vector<string> words = parse(str);
 
 		curCMD = initCmd(words, cmds);
-
+		int error_indicator = validateCmd(curCMD, cmds);
 		for (string str : words) // для отладки
 			cout << str << endl;
-	}
 
+	cout  << "Error_indicator: "<< error_indicator << endl;
+	cout  << "Command: "<< curCMD.name << endl;
+	cout  << "Number of arguments: "<< curCMD.argsNum << endl;
+
+	}
 
 
 	return 0;
@@ -128,13 +134,15 @@ string getStr()
 Command initCmd(vector<string> _words, vector<Command> _cmds)
 {
 	Command cmd;
-	for (unsigned int i = 0; i < _words.size(); i++)
+	for (unsigned int i = 0; i < _cmds.size(); i++)
 	{
 		if (_words[0] == _cmds[i].name)
 		{
 			cmd = _cmds[i];
 			break;
 		}
+		else if (_cmds.size())
+			cmd = _cmds[ERROR_CMD];
 	}
 	//add arguments 
 	if (cmd.e_cmd != ERROR_CMD)
@@ -143,4 +151,16 @@ Command initCmd(vector<string> _words, vector<Command> _cmds)
 			cmd.args.push_back(_words[i]);
 	}
 	return cmd;
+}
+
+int validateCmd(Command _cmd, vector<Command> _cmds)
+{
+	for (Command c : _cmds)
+	{
+		if (c.argsNum == _cmd.args.size())
+			return 1;
+		else
+			return 0;
+	}
+	return -1;
 }
