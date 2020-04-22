@@ -2,18 +2,23 @@
 To do:
 1. Сдлеать парсер который будет разделять строку на слова и записывать в контейнер +
 2. Сделать функцию Command validCmd() которая определяет тип команды
+
 */
 
+#define UNKNOWN_CMD -1
+#define FEW_ARGS -2
+#define MANY_ARGS -3
 
 #include <iostream>
 #include <vector>
 #include <string>
 #include <sstream>
-
+#include <fstream>
 using namespace std;
 
 
-enum COMMANDS {PUSH = 0, GET, LIST, DELETE, QUIT, ERROR_CMD };
+enum COMMANDS {PUSH = 0, GET, LIST, DELETE, QUIT};
+enum ERRORS { ARGS_COUNT_ERROR = 0, UNCORRECT_ARGS_TYPE };
 
 struct Command
 {
@@ -26,20 +31,19 @@ public:
 		e_cmd = _e_cmd;
 	};
 	
-	unsigned int argsNum;
-	string name;
+	unsigned int argsNum = 0;
+	string name = "";
 	vector<string> args;
 	enum COMMANDS e_cmd;
 };
 
-vector<Command> cmds =
+vector<Command> cmds =  
 {
-	Command(2, "push", PUSH),
-	Command(1, "get",  GET),
-	Command(1, "list", LIST),
+	Command(2, "push",	 PUSH),
+	Command(1, "get",	 GET),
+	Command(1, "list",	 LIST),
 	Command(1, "delete", DELETE),
-	Command(0, "quit", QUIT),
-	Command(0, "error", ERROR_CMD),
+	Command(0, "quit",	 QUIT),
 };
 
 vector<string> parse(string str);
@@ -57,15 +61,18 @@ int main()
 		//getline(cin, str);
 		str = getStr();
 		vector<string> words = parse(str);
-
 		curCMD = initCmd(words, cmds);
 		int error_indicator = validateCmd(curCMD, cmds);
 		for (string str : words) // для отладки
 			cout << str << endl;
 
-	cout  << "Error_indicator: "<< error_indicator << endl;
-	cout  << "Command: "<< curCMD.name << endl;
-	cout  << "Number of arguments: "<< curCMD.argsNum << endl;
+
+
+		cout  << "Error_indicator: "<< error_indicator << endl;
+		cout  << "Command: "<< curCMD.name << endl;
+		cout  << "Number of arguments: "<< curCMD.argsNum << endl;
+	
+
 
 	}
 
@@ -73,10 +80,15 @@ int main()
 	return 0;
 }
 
+//---------------Function for pasrse commands and arguments
+
+
+
+
 
 vector<string> parse(string str)
 {
-	bool inBrkts = false;
+	bool inBrkts = false;  
 	bool inWord = false;
 	vector<string> words;
 	string tmpstr = "";
@@ -85,12 +97,12 @@ vector<string> parse(string str)
 	{
 		ch = str[i];
 					
-		if (str[i] == '"' && !inBrkts)
-		{
+		if (str[i] == '"' && !inBrkts)		//----- можно объеденить
+		{										
 			inBrkts = true;
 			continue;
 		}
-		if (str[i] == '"' && inBrkts)
+		if (str[i] == '"' && inBrkts)		//----- можно объеденить
 		{
 			inBrkts = false;
 			words.push_back(tmpstr);
@@ -141,26 +153,27 @@ Command initCmd(vector<string> _words, vector<Command> _cmds)
 			cmd = _cmds[i];
 			break;
 		}
-		else if (_cmds.size())
-			cmd = _cmds[ERROR_CMD];
+		else if (i + 1 == _cmds.size())
+			return cmd;
 	}
 	//add arguments 
-	if (cmd.e_cmd != ERROR_CMD)
-	{
 		for (unsigned int i = 1; i < _words.size(); i++)
 			cmd.args.push_back(_words[i]);
-	}
 	return cmd;
 }
 
-int validateCmd(Command _cmd, vector<Command> _cmds)
+int validateCmd(Command cmd, vector<Command> cmds)
 {
-	for (Command c : _cmds)
+
+	if (cmd.name == "")
+		return UNKNOWN_CMD;
+	for (Command c : cmds)
 	{
-		if (c.argsNum == _cmd.args.size())
-			return 1;
-		else
-			return 0;
+		if (c.argsNum < cmd.args.size())
+			return MANY_ARGS;
+		else if (c.argsNum > cmd.args.size())
+			return FEW_ARGS;
 	}
-	return -1;
 }
+//-----------------------------------------
+
