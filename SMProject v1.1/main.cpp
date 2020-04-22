@@ -5,6 +5,7 @@ To do:
 
 */
 
+
 #define UNKNOWN_CMD -1
 #define FEW_ARGS -2
 #define MANY_ARGS -3
@@ -61,17 +62,31 @@ int main()
 		//getline(cin, str);
 		str = getStr();
 		vector<string> words = parse(str);
+		if (words.empty())	
+			continue;
 		curCMD = initCmd(words, cmds);
 		int error_indicator = validateCmd(curCMD, cmds);
-		for (string str : words) // для отладки
-			cout << str << endl;
 
-
-
-		cout  << "Error_indicator: "<< error_indicator << endl;
-		cout  << "Command: "<< curCMD.name << endl;
-		cout  << "Number of arguments: "<< curCMD.argsNum << endl;
-	
+		switch (curCMD.e_cmd)
+		{
+		case PUSH:
+			cout << "push\n";
+			break;
+		case GET:
+			cout << "get\n";
+			break;
+		case LIST:
+			cout << "list\n";
+			break;
+		case DELETE:
+			cout << "delete\n";
+			break;
+		case QUIT:
+			return 0;
+			break;
+		default :
+			cerr << "ERROR: UNKNOWN_CMD -1\n";
+		}
 
 
 	}
@@ -145,6 +160,8 @@ string getStr()
 
 Command initCmd(vector<string> _words, vector<Command> _cmds)
 {
+	// при нахождении совпадения в списке доступных команд - возвращает объект команды
+	//если совпадение не найдено - возвращаеться пустой объект команды
 	Command cmd;
 	for (unsigned int i = 0; i < _cmds.size(); i++)
 	{
@@ -164,15 +181,15 @@ Command initCmd(vector<string> _words, vector<Command> _cmds)
 
 int validateCmd(Command cmd, vector<Command> cmds)
 {
-
+	//возвращает индикатор ошибки объекта команды 
 	if (cmd.name == "")
-		return UNKNOWN_CMD;
+		return UNKNOWN_CMD;		// неизвестная команда
 	for (Command c : cmds)
 	{
 		if (c.argsNum < cmd.args.size())
-			return MANY_ARGS;
+			return MANY_ARGS;	// много аргументов
 		else if (c.argsNum > cmd.args.size())
-			return FEW_ARGS;
+			return FEW_ARGS;	// мало аргументов
 	}
 }
 //-----------------------------------------
