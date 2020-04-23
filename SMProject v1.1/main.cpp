@@ -2,6 +2,7 @@
 To do:
 1. Сдлеать парсер который будет разделять строку на слова и записывать в контейнер +
 2. Сделать функцию Command validCmd() которая определяет тип команды
+3. Для каждой команды должена быть своя функция нахождения ошибок
 
 */
 
@@ -15,6 +16,7 @@ To do:
 #include <string>
 #include <sstream>
 #include <fstream>
+#include "Data.h"
 using namespace std;
 
 
@@ -47,13 +49,21 @@ vector<Command> cmds =
 	Command(0, "quit",	 QUIT),
 };
 
+Data ArgsToMainData(string name, string body);
+void push(Data d, vector<Data>* md);
+
+//функии для работы с файлом
+string fileName = "Data.txt";
+string getStr(string f_name);
+
 vector<string> parse(string str);
 string getStr();
 Command initCmd(vector<string> _words, vector<Command> _cmds);
 int validateCmd(Command _cmd, vector<Command> _cmds);
+void errorMessage(int e);
 int main()
 {
-	
+	vector<Data> mainData;		
 	Command curCMD;
 	bool isClose = false;
 	string str = "";
@@ -67,10 +77,35 @@ int main()
 		curCMD = initCmd(words, cmds);
 		int error_indicator = validateCmd(curCMD, cmds);
 
+		
+		/*if (error_indicator)
+		{
+			errorMessage(error_indicator);
+			continue;
+		}*/
+
 		switch (curCMD.e_cmd)
 		{
 		case PUSH:
-			cout << "push\n";
+			//заменить конструкцию вывода ошибки на что-то компактное и разумное
+			if (curCMD.argsNum < curCMD.args.size())
+			{
+				error_indicator = MANY_ARGS;	// много аргументов
+				errorMessage(error_indicator);
+				continue;
+			}
+			else if (curCMD.argsNum > curCMD.args.size())
+			{
+				error_indicator = FEW_ARGS;	// мало аргументов
+				errorMessage(error_indicator);
+				continue;
+			}
+			push(ArgsToMainData(curCMD.args[0], curCMD.args[1]), &mainData);
+			system("cls");
+			for (int i = 0; i < mainData.size(); ++i)
+			{
+				cout  << '[' << i << ']' << mainData[i].getName() << endl;
+			}
 			break;
 		case GET:
 			cout << "get\n";
@@ -84,8 +119,8 @@ int main()
 		case QUIT:
 			return 0;
 			break;
-		default :
-			cerr << "ERROR: UNKNOWN_CMD -1\n";
+		default:
+			cerr << "ERROR: UNKNOWN_COMMAND\n";
 		}
 
 
@@ -95,11 +130,43 @@ int main()
 	return 0;
 }
 
+void errorMessage(int e)
+{
+	//временная конструкция для вывода ошибок
+	switch (e)
+	{
+	case UNKNOWN_CMD:
+		cerr << "ERROR: UNKNOWN_COMMAND\n";
+		return;
+	case MANY_ARGS:
+		cerr << "ERROR: TO MUCH ARGUMENTS\n";
+		return;
+	case FEW_ARGS:
+		cerr << "ERROR: FEW ARGUMENTS\n";
+		return;
+	default:
+		return;
+	}
+}
+
+Data ArgsToMainData(string name, string body)
+{
+	return Data(name, body);
+}
+
+void push(Data d, vector<Data>* md)
+{
+	md->push_back(d);
+}
+void pushInFile(string f_name, string name, string body)	// 2-й аргумент - название, 3-й аргумент - определение
+{
+	ofstream fout;
+	fout.open(f_name, ios_base::app);
+	
+}
+
+
 //---------------Function for pasrse commands and arguments
-
-
-
-
 
 vector<string> parse(string str)
 {
@@ -146,7 +213,16 @@ vector<string> parse(string str)
 	return words;
 }
 
-string getStr()
+string getStr(string f_name)	// для работы с файловым потоком
+{
+	string str = "";
+	ifstream fin;
+	fin.open(f_name);
+	while (getline(fin, str)) { cout << str << endl; }
+	fin.close();
+	return str;	
+}
+string getStr()		// для работы с консольным потоком
 //возвращает, полную строку с символом перехода на новую строку 
 {
 	string str = "";
@@ -181,6 +257,7 @@ Command initCmd(vector<string> _words, vector<Command> _cmds)
 
 int validateCmd(Command cmd, vector<Command> cmds)
 {
+	int n_cmd = cmd.argsNum;
 	//возвращает индикатор ошибки объекта команды 
 	if (cmd.name == "")
 		return UNKNOWN_CMD;		// неизвестная команда
@@ -188,9 +265,10 @@ int validateCmd(Command cmd, vector<Command> cmds)
 	{
 		if (c.argsNum < cmd.args.size())
 			return MANY_ARGS;	// много аргументов
-		else if (c.argsNum > cmd.args.size())
+		else if (cmd.args.size() != 0 && c.argsNum > cmd.args.size())
 			return FEW_ARGS;	// мало аргументов
 	}
+	return 0;
 }
 //-----------------------------------------
 
