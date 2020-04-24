@@ -2,7 +2,8 @@
 To do:
 1. Сдлеать парсер который будет разделять строку на слова и записывать в контейнер +
 2. Сделать функцию Command validCmd() которая определяет тип команды
-3. Для каждой команды должена быть своя функция нахождения ошибок
+3. Для каждой команды должена быть своя функция нахождения ошибок 
+4. Сделать возможность сохранять и загружать информацию с файлов
 
 */
 
@@ -20,7 +21,7 @@ To do:
 using namespace std;
 
 
-enum COMMANDS {PUSH = 0, GET, LIST, DELETE, QUIT};
+enum COMMANDS {PUSH = 0, GET, LIST, DELETE, QUIT, CLEAR};
 enum ERRORS { ARGS_COUNT_ERROR = 0, UNCORRECT_ARGS_TYPE };
 
 struct Command
@@ -44,9 +45,10 @@ vector<Command> cmds =
 {
 	Command(2, "push",	 PUSH),
 	Command(1, "get",	 GET),
-	Command(1, "list",	 LIST),
+	Command(0, "list",	 LIST),
 	Command(1, "delete", DELETE),
 	Command(0, "quit",	 QUIT),
+	Command(0, "cls",	 CLEAR)
 };
 
 Data ArgsToMainData(string name, string body);
@@ -88,7 +90,9 @@ int main()
 		{
 		case PUSH:
 			//заменить конструкцию вывода ошибки на что-то компактное и разумное
-			if (curCMD.argsNum < curCMD.args.size())
+
+			
+			if (curCMD.argsNum < curCMD.args.size())			//	проверка количества аргументов
 			{
 				error_indicator = MANY_ARGS;	// много аргументов
 				errorMessage(error_indicator);
@@ -102,22 +106,65 @@ int main()
 			}
 			push(ArgsToMainData(curCMD.args[0], curCMD.args[1]), &mainData);
 			system("cls");
-			for (int i = 0; i < mainData.size(); ++i)
-			{
-				cout  << '[' << i << ']' << mainData[i].getName() << endl;
-			}
+			
 			break;
 		case GET:
+			//если аргумент не число, в i записываеться 0, wtf ??
 			cout << "get\n";
+			if (curCMD.argsNum < curCMD.args.size())			//	проверка количества аргументов
+			{
+				error_indicator = MANY_ARGS;	// много аргументов
+				errorMessage(error_indicator);
+				continue;
+			}
+			else if (curCMD.argsNum > curCMD.args.size())
+			{
+				error_indicator = FEW_ARGS;	// мало аргументов
+				errorMessage(error_indicator);
+				continue;
+			}
+
+			system("cls");
+			unsigned int i;
+			std::istringstream (curCMD.args[0]) >> i;
+			if (i <= 0)
+			{
+				cerr << "ERROR: Argument have to be > 0\n";
+				continue;
+			}
+
+			if (i <= mainData.size())
+			{
+				cout << "/////////////////////////\n";
+				cout << mainData[i - 1].getName() << endl << endl;
+				cout << mainData[i - 1].getDefinition() << endl;
+			}
+			else
+				cout << "There is no element under this number\n";
+			
 			break;
 		case LIST:
-			cout << "list\n";
+			//добавить вывод ошибок
+			//добавить обработку ошибок
+			if (curCMD.argsNum != curCMD.args.size())			//	проверка количества аргументов
+			{
+				error_indicator = MANY_ARGS;
+				errorMessage(error_indicator);
+				continue;
+			}
+			for (int i = 0; i < mainData.size(); ++i)
+			{
+				cout << '[' << i << ']' << mainData[i].getName() << endl;
+			}
 			break;
 		case DELETE:
 			cout << "delete\n";
 			break;
 		case QUIT:
 			return 0;
+			break;
+		case CLEAR:
+			system("cls");
 			break;
 		default:
 			cerr << "ERROR: UNKNOWN_COMMAND\n";
