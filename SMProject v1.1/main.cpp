@@ -57,14 +57,22 @@ void push(Data d, vector<Data>* md);
 //функии для работы с файлом
 string fileName = "Data.txt";
 string getStr(string f_name);
+void saveToFile(string f_name, vector<Data> mData);
+vector<string> readFile(string f_name);
 
 vector<string> parse(string str);
 string getStr();
 Command initCmd(vector<string> _words, vector<Command> _cmds);
-int validateCmd(Command _cmd, vector<Command> _cmds);
+//int validateCmd(Command _cmd, vector<Command> _cmds);
 void errorMessage(int e);
 int main()
 {
+	vector<string> loadData = readFile(fileName);
+	for (string s : loadData)
+	{
+		cout << s << endl;
+	}
+
 	vector<Data> mainData;		
 	Command curCMD;
 	bool isClose = false;
@@ -77,7 +85,9 @@ int main()
 		if (words.empty())	
 			continue;
 		curCMD = initCmd(words, cmds);
-		int error_indicator = validateCmd(curCMD, cmds);
+		//int error_indicator = validateCmd(curCMD, cmds);
+		int error_indicator = 0;
+
 
 		
 		/*if (error_indicator)
@@ -85,7 +95,6 @@ int main()
 			errorMessage(error_indicator);
 			continue;
 		}*/
-
 		switch (curCMD.e_cmd)
 		{
 		case PUSH:
@@ -100,13 +109,11 @@ int main()
 			}
 			else if (curCMD.argsNum > curCMD.args.size())
 			{
-				error_indicator = FEW_ARGS;	// мало аргументов
+				error_indicator = FEW_ARGS;		// мало аргументов
 				errorMessage(error_indicator);
 				continue;
 			}
-			push(ArgsToMainData(curCMD.args[0], curCMD.args[1]), &mainData);
-			system("cls");
-			
+			push(ArgsToMainData(curCMD.args[0], curCMD.args[1]), &mainData);			
 			break;
 		case GET:
 			//если аргумент не число, в i записываеться 0, wtf ??
@@ -119,7 +126,7 @@ int main()
 			}
 			else if (curCMD.argsNum > curCMD.args.size())
 			{
-				error_indicator = FEW_ARGS;	// мало аргументов
+				error_indicator = FEW_ARGS;		// мало аргументов
 				errorMessage(error_indicator);
 				continue;
 			}
@@ -161,6 +168,7 @@ int main()
 			cout << "delete\n";
 			break;
 		case QUIT:
+			saveToFile(fileName, mainData);
 			return 0;
 			break;
 		case CLEAR:
@@ -196,6 +204,23 @@ void errorMessage(int e)
 	}
 }
 
+vector<string> readFile(string f_name)
+{
+	vector<string> l_mData;
+	string lines;
+	ifstream fin(f_name);
+	if (!fin.is_open())
+	{
+		cerr << "Can't open file " << f_name << endl;
+		return l_mData;
+	}
+	while (getline(fin, lines))
+	{
+		l_mData.push_back(lines);
+	}
+	return l_mData;
+}
+
 Data ArgsToMainData(string name, string body)
 {
 	return Data(name, body);
@@ -211,7 +236,13 @@ void pushInFile(string f_name, string name, string body)	// 2-й аргумент - назва
 	fout.open(f_name, ios_base::app);
 	
 }
-
+void saveToFile(string f_name, vector<Data> mData)
+{
+	ofstream fout(f_name, ios_base::app);
+	for (int i = 0; i < mData.size(); ++i)
+		fout << "f:\n" << mData[i].getName() << "\nd:\n" << mData[i].getDefinition() << '\n';
+	fout.close();
+}
 
 //---------------Function for pasrse commands and arguments
 
@@ -271,6 +302,7 @@ string getStr(string f_name)	// для работы с файловым потоком
 }
 string getStr()		// для работы с консольным потоком
 //возвращает, полную строку с символом перехода на новую строку 
+
 {
 	string str = "";
 	char ch = ' ';
@@ -293,7 +325,7 @@ Command initCmd(vector<string> _words, vector<Command> _cmds)
 			cmd = _cmds[i];
 			break;
 		}
-		else if (i + 1 == _cmds.size())
+		else if ((i + 1) == _cmds.size())
 			return cmd;
 	}
 	//add arguments 
@@ -302,7 +334,7 @@ Command initCmd(vector<string> _words, vector<Command> _cmds)
 	return cmd;
 }
 
-int validateCmd(Command cmd, vector<Command> cmds)
+/*int validateCmd(Command cmd, vector<Command> cmds)
 {
 	int n_cmd = cmd.argsNum;
 	//возвращает индикатор ошибки объекта команды 
@@ -316,6 +348,6 @@ int validateCmd(Command cmd, vector<Command> cmds)
 			return FEW_ARGS;	// мало аргументов
 	}
 	return 0;
-}
+}*/
 //-----------------------------------------
 

@@ -17,5 +17,5 @@ public:
 private:
 	std::string name;
 	std::string definition;
-	unsigned int id;
+	unsigned int id = 0;
 };

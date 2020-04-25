@@ -1,2 +1,3 @@
-kjasdkjas kjd kasjdkjksajdk jaksdjl asj dkasj kldjas lkdasklj dkjlsad jkj ldsdadkj asdjksda kjdldkjl
-askljasdd dkljasdjklalkjdd sdkjlads kjldaskljkljds lkjsda kjdld
+*f:first*d:a
+*f:second*d:aasd
+*f:third*d:asdddsa
