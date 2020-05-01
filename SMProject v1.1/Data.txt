@@ -1,3 +1,6 @@
-*f:first*d:a
-*f:second*d:aasd
-*f:third*d:asdddsa
+asd as d
+asasd
+first
+one
+second
+two

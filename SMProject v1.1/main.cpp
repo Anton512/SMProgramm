@@ -21,7 +21,7 @@ To do:
 using namespace std;
 
 
-enum COMMANDS {PUSH = 0, GET, LIST, DELETE, QUIT, CLEAR};
+enum COMMANDS {PUSH = 0, GET, LIST, DELETE, QUIT, CLEAR, HELP};
 enum ERRORS { ARGS_COUNT_ERROR = 0, UNCORRECT_ARGS_TYPE };
 
 struct Command
@@ -41,6 +41,9 @@ public:
 	enum COMMANDS e_cmd;
 };
 
+string helpTxt = "help - use 'help' to see avalible commands\ncls - use 'cls' to clear screen\nget - integer_arg - use 'get' to see element\npush 'arg1' 'arg2' - use 'push' to save new element\ndelete integer_arg - use 'delete' to delete element\nlist - use 'list' to see all elements\n";
+
+
 vector<Command> cmds =  
 {
 	Command(2, "push",	 PUSH),
@@ -48,7 +51,8 @@ vector<Command> cmds =
 	Command(0, "list",	 LIST),
 	Command(1, "delete", DELETE),
 	Command(0, "quit",	 QUIT),
-	Command(0, "cls",	 CLEAR)
+	Command(0, "cls",	 CLEAR),
+	Command(0, "help",	 HELP)
 };
 
 Data ArgsToMainData(string name, string body);
@@ -58,7 +62,7 @@ void push(Data d, vector<Data>* md);
 string fileName = "Data.txt";
 string getStr(string f_name);
 void saveToFile(string f_name, vector<Data> mData);
-vector<string> readFile(string f_name);
+vector<Data> readFile(string f_name);
 
 vector<string> parse(string str);
 string getStr();
@@ -67,13 +71,9 @@ Command initCmd(vector<string> _words, vector<Command> _cmds);
 void errorMessage(int e);
 int main()
 {
-	vector<string> loadData = readFile(fileName);
-	for (string s : loadData)
-	{
-		cout << s << endl;
-	}
 
-	vector<Data> mainData;		
+	vector<Data> mainData = readFile(fileName);
+
 	Command curCMD;
 	bool isClose = false;
 	string str = "";
@@ -88,8 +88,6 @@ int main()
 		//int error_indicator = validateCmd(curCMD, cmds);
 		int error_indicator = 0;
 
-
-		
 		/*if (error_indicator)
 		{
 			errorMessage(error_indicator);
@@ -113,7 +111,8 @@ int main()
 				errorMessage(error_indicator);
 				continue;
 			}
-			push(ArgsToMainData(curCMD.args[0], curCMD.args[1]), &mainData);			
+			push(ArgsToMainData(curCMD.args[0], curCMD.args[1]), &mainData);		
+			saveToFile(fileName, mainData);
 			break;
 		case GET:
 			//если аргумент не число, в i записываеться 0, wtf ??
@@ -165,14 +164,31 @@ int main()
 			}
 			break;
 		case DELETE:
-			cout << "delete\n";
+		{
+			if (!mainData.empty())
+			{
+				unsigned int i = 0;
+				std::istringstream(curCMD.args[0]) >> i;
+				if (i > mainData.size())
+				{
+					cerr << "There is just " << mainData.size() << " elements.\n";
+					break;
+				}
+				mainData.erase(mainData.begin() + i);
+			}
+			else
+				cerr << "There is no data\n";
 			break;
+		}
 		case QUIT:
 			saveToFile(fileName, mainData);
 			return 0;
 			break;
 		case CLEAR:
 			system("cls");
+			break;
+		case HELP:
+			cout << helpTxt;
 			break;
 		default:
 			cerr << "ERROR: UNKNOWN_COMMAND\n";
@@ -204,21 +220,31 @@ void errorMessage(int e)
 	}
 }
 
-vector<string> readFile(string f_name)
+vector<Data> readFile(string f_name)
 {
-	vector<string> l_mData;
+	vector<Data> mData;
+	Data d;
 	string lines;
+	unsigned int countLines = 0;
 	ifstream fin(f_name);
 	if (!fin.is_open())
 	{
 		cerr << "Can't open file " << f_name << endl;
-		return l_mData;
+		return mData;
 	}
 	while (getline(fin, lines))
 	{
-		l_mData.push_back(lines);
+		++countLines;
+		if (countLines == 2)
+		{
+			d.setDefinition(lines);
+			mData.push_back(d);
+			countLines = 0;
+		}
+		else
+			d.setName(lines);
 	}
-	return l_mData;
+	return mData;
 }
 
 Data ArgsToMainData(string name, string body)
@@ -238,9 +264,9 @@ void pushInFile(string f_name, string name, string body)	// 2-й аргумент - назва
 }
 void saveToFile(string f_name, vector<Data> mData)
 {
-	ofstream fout(f_name, ios_base::app);
+	ofstream fout(f_name, ios_base::out);
 	for (int i = 0; i < mData.size(); ++i)
-		fout << "f:\n" << mData[i].getName() << "\nd:\n" << mData[i].getDefinition() << '\n';
+		fout <<  mData[i].getName() << '\n' << mData[i].getDefinition() << '\n';
 	fout.close();
 }
 
@@ -291,15 +317,6 @@ vector<string> parse(string str)
 	return words;
 }
 
-string getStr(string f_name)	// для работы с файловым потоком
-{
-	string str = "";
-	ifstream fin;
-	fin.open(f_name);
-	while (getline(fin, str)) { cout << str << endl; }
-	fin.close();
-	return str;	
-}
 string getStr()		// для работы с консольным потоком
 //возвращает, полную строку с символом перехода на новую строку 
 
@@ -333,6 +350,8 @@ Command initCmd(vector<string> _words, vector<Command> _cmds)
 			cmd.args.push_back(_words[i]);
 	return cmd;
 }
+
+
 
 /*int validateCmd(Command cmd, vector<Command> cmds)
 {
